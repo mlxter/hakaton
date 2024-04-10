@@ -10,12 +10,12 @@
 
 
     <TextView
-        android:id="@+id/text8"
-        android:layout_width="392dp"
-        android:layout_height="45dp"
+        android:id="@+id/resultat"
+        android:layout_width="100dp"
+        android:layout_height="30dp"
         android:fontFamily="@font/sfprotext_bold"
         android:gravity="center_horizontal"
-        android:text="Загрузка"
+        android:text="Результат"
         android:textAlignment="center"
         android:textColor="@color/white"
         android:textSize="18dp"
@@ -29,6 +29,8 @@
 
     <!-- Using CardView for CircularImageView -->
     <androidx.cardview.widget.CardView
+
+        android:id="@+id/cardView"
         android:layout_width="327dp"
         android:layout_height="200dp"
         android:layout_centerHorizontal="true"
@@ -42,7 +44,7 @@
 
         <!-- add a Image image.png in your Drawable folder -->
         <ImageView
-            android:id="@+id/resultImageView"
+            android:id="@+id/resultImageView2"
             android:layout_width="327dp"
             android:layout_height="200dp"
             android:clipToOutline="true"
@@ -53,97 +55,94 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.15" />
 
-
-
     </androidx.cardview.widget.CardView>
 
 
     <TextView
         android:id="@+id/text9"
-        android:layout_width="393dp"
-        android:layout_height="49dp"
-        android:fontFamily="@font/sfprotext_regular"
+        android:layout_width="120dp"
+        android:layout_height="30dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="280dp"
+        android:fontFamily="@font/sfprotext_bold"
         android:gravity="center_vertical"
-        android:text="Заголовок"
-        android:textColor="@color/white"
-        android:textSize="14dp"
-        app:layout_constraintBottom_toTopOf="@+id/Camera"
+        android:text="Заголовок:"
+        android:textColor="@color/purple_500"
+        android:textSize="20dp"
         app:layout_constraintEnd_toEndOf="parent"
-        tools:ignore="MissingConstraints"
-        tools:layout_editor_absoluteX="16dp" />
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/cardView"
+        tools:ignore="MissingConstraints" />
 
+    <TextView
+        android:id="@+id/zagolovok"
+        android:layout_width="380dp"
+        android:layout_height="20dp"
+        android:layout_below="@id/text9"
+        android:layout_marginTop="14dp"
+        android:fontFamily="@font/sfprotext_regular"
+        android:textSize="16sp"
+        android:textColor="@android:color/white"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/text9" />
 
     <TextView
         android:id="@+id/text10"
-        android:layout_width="80dp"
-        android:layout_height="20dp"
-        android:layout_marginBottom="16dp"
-        android:layout_marginRight="315dp"
-        android:fontFamily="@font/sfprotext_regular"
-        android:gravity="center_vertical"
-        android:text="Описание"
-        android:textColor="@color/white"
-        android:textSize="14dp"
-        app:layout_constraintBottom_toTopOf="@+id/opisanie"
-        app:layout_constraintEnd_toEndOf="parent"
-        tools:ignore="MissingConstraints"
-        tools:layout_editor_absoluteX="10dp" />
-
-    <EditText
-        android:id="@+id/opisanie"
-        style="@style/purpleButtonStyle2"
-        android:layout_width="390dp"
-        android:layout_height="150dp"
-        android:fontFamily="@font/sfprotext_regular"
-        android:gravity="top"
-        android:hint="@string/camera_hint"
-        android:padding="16dp"
-        android:paddingLeft="16dp"
-        android:textColor="@color/g_white"
-        android:textColorHint="@color/g_gray700"
-        android:textSize="16dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.476"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/Camera2"
-        app:layout_constraintVertical_bias="0.301" />
-
-    <EditText
-        android:id="@+id/Camera2"
-        style="@style/purpleButtonStyle2"
-        android:layout_width="390dp"
-        android:layout_height="80dp"
-        android:fontFamily="@font/sfprotext_regular"
-        android:gravity="center_vertical"
-        android:hint="@string/camera_hint"
-        android:paddingLeft="16dp"
-        android:selectAllOnFocus="true"
-        android:textColor="@color/g_white"
-        android:textColorHint="@color/g_gray700"
-        android:textSize="16dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.476"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.526" />
-
-    <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/zagruzit"
-        style="@style/purpleButtonStyle"
-        android:layout_width="319dp"
-        android:layout_height="57dp"
+        android:layout_width="120dp"
+        android:layout_height="30dp"
+        android:layout_marginEnd="280dp"
+        android:layout_marginTop="14dp"
         android:fontFamily="@font/sfprotext_bold"
-        android:text="Загрузить"
-        android:textColor="@color/black"
+        android:gravity="center_vertical"
+        android:text="Описание:"
+        android:textColor="@color/purple_500"
         android:textSize="20dp"
-        android:gravity="center"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@+id/opisanie"
-        app:layout_constraintStart_toStartOf="@+id/opisanie"
-        app:layout_constraintTop_toBottomOf="@+id/opisanie"
-        app:layout_constraintVertical_bias="0.455" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/zagolovok"
+        tools:ignore="MissingConstraints" />
+
+    <TextView
+        android:id="@+id/opisanie2"
+        android:layout_width="380dp"
+        android:layout_height="60dp"
+        android:layout_below="@id/text9"
+        android:layout_marginTop="14dp"
+        android:fontFamily="@font/sfprotext_regular"
+        android:textColor="@android:color/white"
+        android:textSize="16sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/text10" />
+
+
+    <TextView
+        android:id="@+id/text11"
+        android:layout_width="300dp"
+        android:layout_height="30dp"
+        android:layout_marginEnd="92dp"
+        android:layout_marginTop="14dp"
+        android:fontFamily="@font/sfprotext_bold"
+        android:gravity="center_vertical"
+        android:text="Результат анализа:"
+        android:textColor="@color/purple_500"
+        android:textSize="20dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/opisanie2"
+        tools:ignore="MissingConstraints" />
+
+    <TextView
+        android:id="@+id/rezultat"
+        android:layout_width="380dp"
+        android:layout_height="60dp"
+        android:layout_below="@id/text11"
+        android:layout_marginTop="14dp"
+        android:fontFamily="@font/sfprotext_regular"
+        android:textSize="16sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/text11" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guidelineLeftTexture"
@@ -171,7 +170,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.18" />
+        app:layout_constraintGuide_percent="0.41" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guidelineEllipseBottom"

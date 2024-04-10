@@ -6,7 +6,7 @@
         android:icon="@drawable/dom" />
 
     <item
-        android:id="@+id/analiz"
+        android:id="@+id/navigation_dashboard"
         android:icon="@drawable/analiz"
         android:title="Analiz" />
 

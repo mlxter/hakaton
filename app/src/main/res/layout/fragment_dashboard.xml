@@ -8,23 +8,37 @@
 
 
     <ImageView
+        android:id="@+id/telephone"
         android:layout_width="83dp"
         android:layout_height="51dp"
+        android:layout_marginTop="13dp"
+        android:layout_marginBottom="14dp"
         android:src="@drawable/camera"
-        tools:layout_editor_absoluteX="32dp"
-        tools:layout_editor_absoluteY="139dp" />
+        app:layout_constraintBottom_toBottomOf="@+id/Camera"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.076"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/Camera"
+        app:layout_constraintVertical_bias="0.0" />
 
     <ImageView
+        android:id="@+id/photos"
         android:layout_width="83dp"
         android:layout_height="51dp"
+        android:layout_marginTop="13dp"
+        android:layout_marginBottom="14dp"
         android:src="@drawable/galereya"
-        tools:layout_editor_absoluteX="32dp"
-        tools:layout_editor_absoluteY="231dp" />
+        app:layout_constraintBottom_toBottomOf="@+id/galereya"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.076"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/galereya"
+        app:layout_constraintVertical_bias="0.004" />
 
     <TextView
         android:id="@+id/text8"
-        android:layout_width="392dp"
-        android:layout_height="45dp"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
         android:fontFamily="@font/sfprotext_bold"
         android:gravity="center_horizontal"
         android:text="Фотоотчет"
@@ -33,16 +47,14 @@
         android:textSize="18dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.473"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.023" />
 
-
     <TextView
         android:id="@+id/text9"
-        android:layout_width="393dp"
-        android:layout_height="49dp"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
         android:fontFamily="@font/sfprotext_regular"
         android:text="Выберите тип загрузки чека"
         android:gravity="center_vertical"
@@ -50,7 +62,6 @@
         android:textSize="14dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.108" />
@@ -58,15 +69,16 @@
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/Camera"
         style="@style/purpleButtonStyle2"
-        android:layout_width="390dp"
+        android:layout_width="0dp"
         android:layout_height="80dp"
+        android:layout_marginTop="16dp"
         android:fontFamily="@font/sfprotext_regular"
         android:text="Использовать камеру"
         android:textColor="@color/white"
         android:textSize="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.523"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/text9"
         app:layout_constraintVertical_bias="0.0" />
@@ -74,53 +86,47 @@
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/galereya"
         style="@style/purpleButtonStyle2"
-        android:layout_width="390dp"
+        android:layout_width="0dp"
         android:layout_height="80dp"
+        android:layout_marginTop="16dp"
         android:fontFamily="@font/sfprotext_regular"
         android:text="Выбрать из галереи"
         android:textColor="@color/white"
         android:textSize="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.523"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/Camera"
         app:layout_constraintVertical_bias="0.033" />
 
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guidelineLeftTexture"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.33" />
+    <androidx.cardview.widget.CardView
+        android:layout_width="327dp"
+        android:layout_height="200dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="5dp"
+        app:cardCornerRadius="30dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.754">
 
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guidelineEllipseLeft"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.15" />
+        <!-- add a Image image.png in your Drawable folder -->
 
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guidelineEllipseRight"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.85" />
 
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guidelineEllipseTop"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.18" />
+    <ImageView
+        android:id="@+id/resultImageView22"
+        android:layout_width="327dp"
+        android:layout_height="200dp"
+        android:clipToOutline="true"
+        android:scaleType="centerCrop"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.511"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.757" />
 
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guidelineEllipseBottom"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.52" />
-
+    </androidx.cardview.widget.CardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

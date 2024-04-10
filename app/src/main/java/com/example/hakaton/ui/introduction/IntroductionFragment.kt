@@ -1,20 +1,18 @@
 package com.example.hakaton.ui.introduction
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
-import com.example.hakaton.databinding.GlavniuEkranBinding
+import com.example.hakaton.MainActivity
+import com.example.hakaton.databinding.FragmentIntroductionBinding
+
 
 class IntroductionFragment : Fragment() {
 
-    private var _binding: GlavniuEkranBinding? = null
-
-    // This property is only valid between onCreateView and
-    // onDestroyView.
+    private var _binding: FragmentIntroductionBinding? = null
     private val binding get() = _binding!!
 
     override fun onCreateView(
@@ -22,17 +20,19 @@ class IntroductionFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val homeViewModel =
-            ViewModelProvider(this).get(IntroductionViewModel::class.java)
+        _binding = FragmentIntroductionBinding.inflate(inflater, container, false)
+        return binding.root
+    }
 
-        _binding = GlavniuEkranBinding.inflate(inflater, container, false)
-        val root: View = binding.root
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
-        val textView: TextView = binding.tvQuality
-        homeViewModel.text.observe(viewLifecycleOwner) {
-            textView.text = it
+        // Найти кнопку по ID и установить обработчик нажатия
+        binding.buttonStart.setOnClickListener {
+            val intent = Intent(requireActivity(), MainActivity::class.java)
+            startActivity(intent)
         }
-        return root
+
     }
 
     override fun onDestroyView() {
@@ -40,3 +40,6 @@ class IntroductionFragment : Fragment() {
         _binding = null
     }
 }
+
+
+
