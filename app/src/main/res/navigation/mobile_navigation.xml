@@ -6,11 +6,6 @@
     app:startDestination="@id/navigation_home">
 
     <fragment
-        android:id="@+id/introductionFragment"
-        android:name="com.example.hakaton.ui.introduction.IntroductionFragment"
-        android:label="IntroductionFragment"
-        tools:layout="@layout/fragment_introduction"/>
-    <fragment
         android:id="@+id/navigation_home"
         android:name="com.example.hakaton.ui.home.HomeFragment"
         android:label="@string/title_home"
@@ -41,7 +36,7 @@
     </fragment>
     <fragment
         android:id="@+id/fragment_resultat"
-        android:name="com.example.hakaton.ui.rezultat.ResultFragment"
+        android:name="com.example.hakaton.ui.rezultat.LoginFragment"
         android:label="rezultat"
         tools:layout="@layout/fragment_resultat" />
 </navigation>

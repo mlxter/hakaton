@@ -1,6 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -53,6 +54,7 @@ dependencies {
     implementation("androidx.navigation:navigation-fragment-ktx:2.7.7")
     implementation("androidx.navigation:navigation-ui-ktx:2.7.7")
     implementation("org.tensorflow:tensorflow-lite-metadata:0.1.0")
+    implementation("com.google.firebase:firebase-auth:22.3.1")
     testImplementation("junit:junit:4.13.2")
     implementation("androidx.cardview:cardview:1.0.0")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
@@ -60,5 +62,9 @@ dependencies {
     implementation ("org.tensorflow:tensorflow-lite:2.7.0")
     implementation ("org.tensorflow:tensorflow-lite-gpu:2.7.0")
     implementation ("org.tensorflow:tensorflow-lite-support:0.3.0")
-    implementation ("com.rmtheis:tess-two:9.1.0")
+    implementation ("cz.adaptech.tesseract4android:tesseract4android:4.7.0")
+    implementation(platform("com.google.firebase:firebase-bom:32.8.0"))
+    implementation ("com.google.firebase:firebase-auth-ktx:22.0.0")
+    implementation ("com.google.firebase:firebase-firestore:24.0.1")
+    implementation ("com.google.firebase:firebase-firestore-ktx:24.0.1")
     }

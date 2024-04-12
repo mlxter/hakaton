@@ -138,6 +138,7 @@
         android:layout_height="60dp"
         android:layout_below="@id/text11"
         android:layout_marginTop="14dp"
+        android:textColor="@android:color/white"
         android:fontFamily="@font/sfprotext_regular"
         android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
