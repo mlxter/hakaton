@@ -60,14 +60,16 @@
 
     <TextView
         android:id="@+id/text9"
-        android:layout_width="393dp"
-        android:layout_height="49dp"
+        android:layout_width="80dp"
+        android:layout_height="20dp"
+        android:layout_marginRight="315dp"
+        android:layout_marginBottom="10dp"
         android:fontFamily="@font/sfprotext_regular"
         android:gravity="center_vertical"
         android:text="Заголовок"
         android:textColor="@color/white"
         android:textSize="14dp"
-        app:layout_constraintBottom_toTopOf="@+id/Camera"
+        app:layout_constraintBottom_toTopOf="@+id/Camera2"
         app:layout_constraintEnd_toEndOf="parent"
         tools:ignore="MissingConstraints"
         tools:layout_editor_absoluteX="16dp" />
@@ -77,7 +79,7 @@
         android:id="@+id/text10"
         android:layout_width="80dp"
         android:layout_height="20dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="10dp"
         android:layout_marginRight="315dp"
         android:fontFamily="@font/sfprotext_regular"
         android:gravity="center_vertical"

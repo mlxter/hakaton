@@ -6,8 +6,10 @@ import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Rect
 import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -15,6 +17,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
+import android.view.animation.AnimationUtils
 import androidx.fragment.app.Fragment
 import com.example.hakaton.R
 import com.example.hakaton.databinding.FragmentNotificationsBinding
@@ -22,15 +25,82 @@ import androidx.navigation.fragment.findNavController
 import com.example.hakaton.ui.SharedViewModel
 import android.widget.EditText
 import android.widget.ImageView
+import androidx.core.content.FileProvider
 import androidx.fragment.app.activityViewModels
 import com.example.hakaton.BoundingBox
+import com.example.hakaton.Yolov5TFLiteDetector
+import com.googlecode.tesseract.android.TessBaseAPI
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.support.image.TensorImage
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
+import java.io.File
+import java.io.FileOutputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
+
+
+//class NotificationsFragment : Fragment() {
+//
+//    private var _binding: FragmentNotificationsBinding? = null
+//    private val binding get() = _binding!!
+//
+//    private val sharedViewModel: SharedViewModel by activityViewModels()
+//
+//    override fun onCreateView(
+//        inflater: LayoutInflater,
+//        container: ViewGroup?,
+//        savedInstanceState: Bundle?
+//    ): View {
+//        _binding = FragmentNotificationsBinding.inflate(inflater, container, false)
+//        val root: View = binding.root
+//
+//        // Добавление обработчика ввода текста в EditText Camera2
+//        val cameraEditText = root.findViewById<EditText>(R.id.Camera2)
+//        cameraEditText.addTextChangedListener(object : TextWatcher {
+//            override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
+//
+//            override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
+//                Log.d("EditTextInput", "Текст изменен: $s")
+//                sharedViewModel.setCamera2Text(s.toString())
+//            }
+//
+//            override fun afterTextChanged(s: Editable) {}
+//        })
+//
+//        // Добавление обработчика ввода текста в EditText opisanie
+//        val opisanieEditText = root.findViewById<EditText>(R.id.opisanie)
+//        opisanieEditText.addTextChangedListener(object : TextWatcher {
+//            override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
+//
+//            override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
+//                Log.d("EditTextInput", "Текст2 изменен: $s")
+//                sharedViewModel.setOpisanieText(s.toString())
+//            }
+//
+//            override fun afterTextChanged(s: Editable) {}
+//        })
+//
+//        // Получение Uri изображения из Bundle
+//        arguments?.getParcelable<Uri>("imageUri")?.let { uri ->
+//            binding.resultImageView.setImageURI(uri)
+//        }
+//
+//        // Добавление обработчика нажатия на кнопку
+//        binding.zagruzit.setOnClickListener {
+//            // Переход на следующий фрагмент
+//            findNavController().navigate(R.id.action_navigation_notifications_to_fragment_resultat)
+//        }
+//
+//        return root
+//    }
+//
+//    override fun onDestroyView() {
+//        super.onDestroyView()
+//        _binding = null
+//    }
+//}
 
 class NotificationsFragment : Fragment() {
 
@@ -38,6 +108,10 @@ class NotificationsFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val sharedViewModel: SharedViewModel by activityViewModels()
+    private lateinit var yolov5TFLiteDetector: Yolov5TFLiteDetector
+    private lateinit var boxPaint: Paint
+    private lateinit var textPaint: Paint
+
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -46,6 +120,16 @@ class NotificationsFragment : Fragment() {
     ): View {
         _binding = FragmentNotificationsBinding.inflate(inflater, container, false)
         val root: View = binding.root
+
+
+
+
+
+        // Получение Uri изображения из Bundle
+        arguments?.getParcelable<Uri>("imageUri")?.let { uri ->
+            // Отображение изображения
+            binding.resultImageView.setImageURI(uri)
+        }
 
         // Добавление обработчика ввода текста в EditText Camera2
         val cameraEditText = root.findViewById<EditText>(R.id.Camera2)
@@ -73,15 +157,79 @@ class NotificationsFragment : Fragment() {
             override fun afterTextChanged(s: Editable) {}
         })
 
-        // Получение Uri изображения из Bundle
-        arguments?.getParcelable<Uri>("imageUri")?.let { uri ->
-            binding.resultImageView.setImageURI(uri)
+        // Инициализация детектора и модели
+        yolov5TFLiteDetector = Yolov5TFLiteDetector()
+        yolov5TFLiteDetector.setModelFile("price.tflite")
+        yolov5TFLiteDetector.initialModel(requireContext())
+
+        boxPaint = Paint().apply {
+            strokeWidth = 5f
+            style = Paint.Style.STROKE
+            color = Color.RED
         }
 
-        // Добавление обработчика нажатия на кнопку
+        // Создание Paint для фона
+        val backgroundPaint = Paint().apply {
+            color = Color.RED
+            style = Paint.Style.FILL
+        }
+
+        // Создание Paint для текста
+        val textPaint = Paint().apply {
+            textSize = 28f
+            color = Color.WHITE // Белые буквы
+            style = Paint.Style.FILL
+        }
+
+        val scaleAnimation = AnimationUtils.loadAnimation(requireContext(), R.anim.button_press_animation3)
+
+        // Обработка изображения при нажатии на кнопку
         binding.zagruzit.setOnClickListener {
-            // Переход на следующий фрагмент
-            findNavController().navigate(R.id.action_navigation_notifications_to_fragment_resultat)
+            binding.zagruzit.startAnimation(scaleAnimation)
+            binding.zagruzit.postDelayed({
+            // Получение Uri изображения из Bundle
+            arguments?.getParcelable<Uri>("imageUri")?.let { uri ->
+                val bitmap = MediaStore.Images.Media.getBitmap(requireContext().contentResolver, uri)
+                val recognitions = yolov5TFLiteDetector.detect(bitmap)
+                val mutableBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true)
+                val canvas = Canvas(mutableBitmap)
+
+                for (recognition in recognitions) {
+                    if (recognition.confidence > 0.4) {
+                        val location = recognition.location
+                        canvas.drawRect(location, boxPaint)
+
+
+                        val textBounds = Rect()
+                        textPaint.getTextBounds(recognition.labelName, 0, recognition.labelName.length, textBounds)
+                        canvas.drawRect(location.left, location.top - textBounds.height(), location.right, location.top, backgroundPaint)
+
+                        // Рисуем текст поверх фона
+                        canvas.drawText(recognition.labelName, location.left, location.top, textPaint)
+
+                    }
+                }
+
+
+                val tempFile = File.createTempFile("processed_image", ".png", requireContext().cacheDir)
+                val outStream = FileOutputStream(tempFile)
+                mutableBitmap.compress(Bitmap.CompressFormat.PNG, 100, outStream)
+                outStream.close()
+
+                val tempFileUri = FileProvider.getUriForFile(
+                    requireContext(),
+                    "com.example.hakaton.fileprovider",
+                    tempFile
+                )
+
+                val bundle = Bundle().apply {
+                    putParcelable("imageUri", tempFileUri)
+                }
+
+                // Переходим к ResultFragment, передавая Bundle
+                findNavController().navigate(R.id.action_navigation_notifications_to_fragment_resultat, bundle)
+            }
+                                         }, scaleAnimation.duration)
         }
 
         return root
@@ -92,6 +240,7 @@ class NotificationsFragment : Fragment() {
         _binding = null
     }
 }
+
 
 
 //class NotificationsFragment : Fragment() {

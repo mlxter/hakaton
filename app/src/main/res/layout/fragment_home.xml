@@ -22,20 +22,23 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.023" />
 
+    <!-- Добавьте layout_marginTop для добавления интервала между элементами -->
+
+    <!-- Добавьте layout_marginTop для добавления интервала между элементами -->
+
     <TextView
         android:id="@+id/text2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
         android:fontFamily="@font/sfprotext_bold"
         android:text="О приложении:"
         android:textColor="@color/purple_500"
         android:textSize="22sp"
-        app:layout_constraintBottom_toTopOf="@+id/text3"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.029"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/text"
-        app:layout_constraintVertical_bias="0.109" />
+        app:layout_constraintTop_toBottomOf="@+id/text" />
 
     <TextView
         android:id="@+id/text3"
@@ -47,17 +50,15 @@
         android:textColor="@color/white"
         android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/text2" />
 
-    <!-- Добавьте layout_marginTop для добавления интервала между элементами -->
-
-    <!-- Добавьте layout_marginTop для добавления интервала между элементами -->
     <TextView
         android:id="@+id/text4"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="20dp"
         android:fontFamily="@font/sfprotext_bold"
         android:text="Основные функции:"
         android:textColor="@color/purple_500"

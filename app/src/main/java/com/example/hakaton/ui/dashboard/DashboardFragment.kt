@@ -12,11 +12,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
+import android.view.animation.AnimationUtils
 import android.widget.ImageView
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.example.hakaton.BoundingBox
 import com.example.hakaton.R
@@ -95,90 +98,94 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 
-//class DashboardFragment : Fragment() {
-//
-//    private var _binding: FragmentDashboardBinding? = null
-//    private val binding get() = _binding!!
-//
-//    private val selectImage = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-//        uri?.let {
-//            val bundle = Bundle().apply {
-//                putParcelable("imageUri", it)
-//            }
-//            findNavController().navigate(R.id.action_navigation_dashboard_to_navigation_notifications, bundle)
-//        }
-//    }
-//
-//    private val captureImage = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
-//        if (success) {
-//            lastImageUri?.let {
-//                val bundle = Bundle().apply {
-//                    putParcelable("imageUri", it)
-//                }
-//                findNavController().navigate(R.id.action_navigation_dashboard_to_navigation_notifications, bundle)
-//            }
-//        }
-//    }
-//
-//    private var lastImageUri: Uri? = null
-//
-//    override fun onCreateView(
-//        inflater: LayoutInflater,
-//        container: ViewGroup?,
-//        savedInstanceState: Bundle?
-//    ): View {
-//        _binding = FragmentDashboardBinding.inflate(inflater, container, false)
-//        val root: View = binding.root
-//
-//        binding.Camera.setOnClickListener {
-//            val imageUri = createImageUri()
-//            lastImageUri = imageUri
-//            captureImage.launch(imageUri)
-//        }
-//
-//        binding.galereya.setOnClickListener {
-//            selectImage.launch("image/*")
-//        }
-//
-//        return root
-//    }
-//
-//    private fun createImageUri(): Uri {
-//        val image = File(requireContext().filesDir, "camera_photos.png")
-//        return FileProvider.getUriForFile(
-//            requireContext(),
-//            "com.example.hakaton.fileprovider",
-//            image
-//        )
-//    }
-//
-//    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-//        super.onViewCreated(view, savedInstanceState)
-//
-//        findNavController().addOnDestinationChangedListener { _, destination, _ ->
-//            if (destination.id == R.id.navigation_notifications) {
-//                hideBottomNavigationView()
-//            } else {
-//                showBottomNavigationView()
-//            }
-//        }
-//    }
-//
-//    private fun hideBottomNavigationView() {
-//        val bottomNavigationView = activity?.findViewById<BottomNavigationView>(R.id.nav_view)
-//        bottomNavigationView?.visibility = View.GONE
-//    }
-//
-//    private fun showBottomNavigationView() {
-//        val bottomNavigationView = activity?.findViewById<BottomNavigationView>(R.id.nav_view)
-//        bottomNavigationView?.visibility = View.VISIBLE
-//    }
-//
-//    override fun onDestroyView() {
-//        super.onDestroyView()
-//        _binding = null
-//    }
-//}
+class DashboardFragment : Fragment() {
+
+    private var _binding: FragmentDashboardBinding? = null
+    private val binding get() = _binding!!
+
+    private val selectImage = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let {
+            val bundle = Bundle().apply {
+                putParcelable("imageUri", it)
+            }
+            findNavController().navigate(R.id.action_navigation_dashboard_to_navigation_notifications, bundle)
+        }
+    }
+
+    private val captureImage = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+        if (success) {
+            lastImageUri?.let {
+                val bundle = Bundle().apply {
+                    putParcelable("imageUri", it)
+                }
+                findNavController().navigate(R.id.action_navigation_dashboard_to_navigation_notifications, bundle)
+            }
+        }
+    }
+
+    private var lastImageUri: Uri? = null
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentDashboardBinding.inflate(inflater, container, false)
+        val root: View = binding.root
+
+        val scaleAnimation = AnimationUtils.loadAnimation(requireContext(), R.anim.button_press_animation2)
+
+        binding.Camera.setOnClickListener {
+            binding.Camera.startAnimation(scaleAnimation)
+            val imageUri = createImageUri()
+            lastImageUri = imageUri
+            captureImage.launch(imageUri)
+        }
+
+        binding.galereya.setOnClickListener {
+            binding.galereya.startAnimation(scaleAnimation)
+            selectImage.launch("image/*")
+        }
+
+        return root
+    }
+
+    private fun createImageUri(): Uri {
+        val image = File(requireContext().filesDir, "camera_photos.png")
+        return FileProvider.getUriForFile(
+            requireContext(),
+            "com.example.hakaton.fileprovider",
+            image
+        )
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        findNavController().addOnDestinationChangedListener { _, destination, _ ->
+            if (destination.id == R.id.navigation_notifications) {
+                hideBottomNavigationView()
+            } else {
+                showBottomNavigationView()
+            }
+        }
+    }
+
+    private fun hideBottomNavigationView() {
+        val bottomNavigationView = activity?.findViewById<BottomNavigationView>(R.id.nav_view)
+        bottomNavigationView?.visibility = View.GONE
+    }
+
+    private fun showBottomNavigationView() {
+        val bottomNavigationView = activity?.findViewById<BottomNavigationView>(R.id.nav_view)
+        bottomNavigationView?.visibility = View.VISIBLE
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+}
 
 
 //class DashboardFragment : Fragment() {
@@ -574,101 +581,104 @@ import java.nio.ByteOrder
 //}
 
 
-class DashboardFragment : Fragment() {
+//class DashboardFragment : Fragment() {
+//
+//    private var _binding: FragmentDashboardBinding? = null
+//    private val binding get() = _binding!!
+//
+//    private val sharedViewModel: SharedViewModel by viewModels()
+//
+//    private val selectImage = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+//        uri?.let {
+//            processImage(it)
+//        }
+//    }
+//
+//    private val captureImage = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+//        if (success) {
+//            lastImageUri?.let {
+//                processImage(it)
+//            }
+//        }
+//    }
+//
+//    private var lastImageUri: Uri? = null
+//    private lateinit var yolov5TFLiteDetector: Yolov5TFLiteDetector
+//    private lateinit var boxPaint: Paint
+//    private lateinit var textPaint: Paint
+//
+//    override fun onCreateView(
+//        inflater: LayoutInflater,
+//        container: ViewGroup?,
+//        savedInstanceState: Bundle?
+//    ): View {
+//        _binding = FragmentDashboardBinding.inflate(inflater, container, false)
+//        val root: View = binding.root
+//
+//        yolov5TFLiteDetector = Yolov5TFLiteDetector()
+//        yolov5TFLiteDetector.setModelFile("price.tflite")
+//        yolov5TFLiteDetector.initialModel(requireContext())
+//
+//        boxPaint = Paint().apply {
+//            strokeWidth = 5f
+//            style = Paint.Style.STROKE
+//            color = Color.RED
+//        }
+//
+//        textPaint = Paint().apply {
+//            textSize = 50f
+//            color = Color.GREEN
+//            style = Paint.Style.FILL
+//        }
+//
+//        binding.Camera.setOnClickListener {
+//            val imageUri = createImageUri()
+//            lastImageUri = imageUri
+//            captureImage.launch(imageUri)
+//        }
+//
+//        binding.galereya.setOnClickListener {
+//            selectImage.launch("image/*")
+//        }
+//
+//        return root
+//    }
+//
+//    private fun createImageUri(): Uri {
+//        val image = File(requireContext().filesDir, "camera_photos.png")
+//        return FileProvider.getUriForFile(
+//            requireContext(),
+//            "com.example.yourapp.fileprovider",
+//            image
+//        )
+//    }
+//
+//    private fun processImage(uri: Uri) {
+//        val bitmap = MediaStore.Images.Media.getBitmap(requireContext().contentResolver, uri)
+//        val recognitions = yolov5TFLiteDetector.detect(bitmap)
+//        val mutableBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true)
+//        val canvas = Canvas(mutableBitmap)
+//
+//        for (recognition in recognitions) {
+//            if (recognition.confidence > 0.4) {
+//                val location = recognition.location
+//                canvas.drawRect(location, boxPaint)
+//                canvas.drawText(recognition.labelName + ":" + recognition.confidence, location.left, location.top, textPaint)
+//            }
+//        }
+//
+//        // Загружаем обработанное изображение в ImageView
+//        binding.resultImageView22.setImageBitmap(mutableBitmap)
+//    }
+//
+//    override fun onDestroyView() {
+//        super.onDestroyView()
+//        _binding = null
+//    }
+//}
 
-    private var _binding: FragmentDashboardBinding? = null
-    private val binding get() = _binding!!
 
-    private val sharedViewModel: SharedViewModel by viewModels()
 
-    private val selectImage = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        uri?.let {
-            processImage(it)
-        }
-    }
-
-    private val captureImage = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
-        if (success) {
-            lastImageUri?.let {
-                processImage(it)
-            }
-        }
-    }
-
-    private var lastImageUri: Uri? = null
-    private lateinit var yolov5TFLiteDetector: Yolov5TFLiteDetector
-    private lateinit var boxPaint: Paint
-    private lateinit var textPaint: Paint
-
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        _binding = FragmentDashboardBinding.inflate(inflater, container, false)
-        val root: View = binding.root
-
-        yolov5TFLiteDetector = Yolov5TFLiteDetector()
-        yolov5TFLiteDetector.setModelFile("price.tflite")
-        yolov5TFLiteDetector.initialModel(requireContext())
-
-        boxPaint = Paint().apply {
-            strokeWidth = 5f
-            style = Paint.Style.STROKE
-            color = Color.RED
-        }
-
-        textPaint = Paint().apply {
-            textSize = 50f
-            color = Color.GREEN
-            style = Paint.Style.FILL
-        }
-
-        binding.Camera.setOnClickListener {
-            val imageUri = createImageUri()
-            lastImageUri = imageUri
-            captureImage.launch(imageUri)
-        }
-
-        binding.galereya.setOnClickListener {
-            selectImage.launch("image/*")
-        }
-
-        return root
-    }
-
-    private fun createImageUri(): Uri {
-        val image = File(requireContext().filesDir, "camera_photos.png")
-        return FileProvider.getUriForFile(
-            requireContext(),
-            "com.example.yourapp.fileprovider",
-            image
-        )
-    }
-
-    private fun processImage(uri: Uri) {
-        val bitmap = MediaStore.Images.Media.getBitmap(requireContext().contentResolver, uri)
-        val recognitions = yolov5TFLiteDetector.detect(bitmap)
-        val mutableBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true)
-        val canvas = Canvas(mutableBitmap)
-
-        for (recognition in recognitions) {
-            if (recognition.confidence > 0.4) {
-                val location = recognition.location
-                canvas.drawRect(location, boxPaint)
-                canvas.drawText(recognition.labelName + ":" + recognition.confidence, location.left, location.top, textPaint)
-            }
-        }
-
-        // Загружаем обработанное изображение в ImageView
-        binding.resultImageView22.setImageBitmap(mutableBitmap)
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
-}
 
 
 
