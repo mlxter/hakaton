@@ -1,6 +1,7 @@
 package com.example.hakaton.ui.notifications
 
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
@@ -247,9 +248,12 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
+import jxl.Workbook
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
@@ -260,9 +264,11 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Query
-
-
-
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStream
+import java.io.InputStreamReader
+import java.net.URL
 
 class NotificationsFragment : Fragment() {
 
@@ -270,9 +276,6 @@ class NotificationsFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val sharedViewModel: SharedViewModel by activityViewModels()
-    private lateinit var yolov5TFLiteDetector: Yolov5TFLiteDetector
-    private lateinit var boxPaint: Paint
-    private lateinit var textPaint: Paint
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -282,23 +285,24 @@ class NotificationsFragment : Fragment() {
         _binding = FragmentNotificationsBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
+        val scaleAnimation = AnimationUtils.loadAnimation(requireContext(), R.anim.button_press_animation3)
 
-        val addresses = listOf("г. Амвросиевка, ул, Мичурина, 1, ул. Фрунзе, 24", "г. Амвросиевка, ул, Мичурина, 4а", "г. Амвросиевка, ул. Ленина, 2, ул. Свободы, 13, ул. Краснодонцев, 32а, ул. Краснодонцев, 99", "г. Амвросиевка, ул. Суворова, 26, Донецкоешоссе, 3", "г. Амвросиевка, ул. 2-яПятилетка, ул. Ленина, 26, ул. Фрунзе, 12, ул. Мичурина, 81, ул. Фрунзе, 8, ул. Фрунзе, 2а") // Замените это на ваш список адресов
+        val locations = readLocationsFromXls(requireContext())
+        val districts = locations.map { it.district }.distinct()
+        val districtAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, districts)
+        binding.Camera3.setAdapter(districtAdapter)
 
-        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, addresses)
-        binding.Camera2.setAdapter(adapter)
-
-        // Получение Uri изображения из Bundle
-        arguments?.getParcelable<Uri>("imageUri")?.let { uri ->
-            // Отображение изображения
-            binding.resultImageView.setImageURI(uri)
-            // Асинхронная отправка изображения на сервер
-            CoroutineScope(Dispatchers.IO).launch {
-                sendImageToServer(uri)
-            }
+        binding.Camera3.setOnItemClickListener { _, _, position, _ ->
+            val selectedDistrict = districts[position]
+            val filteredAddresses = locations.filter { it.district == selectedDistrict }.map { it.address }
+            val addressAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, filteredAddresses)
+            binding.Camera2.setAdapter(addressAdapter)
         }
 
-        // Добавление обработчика ввода текста в EditText Camera2
+        arguments?.getParcelable<Uri>("imageUri")?.let { uri ->
+            binding.resultImageView.setImageURI(uri)
+        }
+
         val cameraEditText = root.findViewById<EditText>(R.id.Camera2)
         cameraEditText.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
@@ -311,7 +315,6 @@ class NotificationsFragment : Fragment() {
             override fun afterTextChanged(s: Editable) {}
         })
 
-        // Добавление обработчика ввода текста в EditText opisanie
         val opisanieEditText = root.findViewById<EditText>(R.id.opisanie)
         opisanieEditText.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
@@ -324,74 +327,30 @@ class NotificationsFragment : Fragment() {
             override fun afterTextChanged(s: Editable) {}
         })
 
-        // Инициализация детектора и модели
-        yolov5TFLiteDetector = Yolov5TFLiteDetector()
-        yolov5TFLiteDetector.setModelFile("price.tflite")
-        yolov5TFLiteDetector.initialModel(requireContext())
+        val camera3EditText = root.findViewById<EditText>(R.id.Camera3)
+        camera3EditText.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
 
-        boxPaint = Paint().apply {
-            strokeWidth = 5f
-            style = Paint.Style.STROKE
-            color = Color.RED
-        }
+            override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
+                Log.d("EditTextInput", "Текст изменен: $s")
+                sharedViewModel.setCamera3Text(s.toString())
+            }
 
-        // Создание Paint для фона
-        val backgroundPaint = Paint().apply {
-            color = Color.RED
-            style = Paint.Style.FILL
-        }
+            override fun afterTextChanged(s: Editable) {}
+        })
 
-        // Создание Paint для текста
-        textPaint = Paint().apply {
-            textSize = 60f
-            color = Color.WHITE // Белые буквы
-            style = Paint.Style.FILL
-        }
-
-        val scaleAnimation = AnimationUtils.loadAnimation(requireContext(), R.anim.button_press_animation3)
-
-        // Обработка изображения при нажатии на кнопку
         binding.zagruzit.setOnClickListener {
             binding.zagruzit.startAnimation(scaleAnimation)
             binding.zagruzit.postDelayed({
-                // Получение Uri изображения из Bundle
                 arguments?.getParcelable<Uri>("imageUri")?.let { uri ->
-                    val bitmap = MediaStore.Images.Media.getBitmap(requireContext().contentResolver, uri)
-                    val recognitions = yolov5TFLiteDetector.detect(bitmap)
-                    val mutableBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true)
-                    val canvas = Canvas(mutableBitmap)
-
-                    for (recognition in recognitions) {
-                        if (recognition.confidence > 0.4) {
-                            val location = recognition.location
-                            canvas.drawRect(location, boxPaint)
-
-                            val textBounds = Rect()
-                            textPaint.getTextBounds(recognition.labelName, 0, recognition.labelName.length, textBounds)
-                            canvas.drawRect(location.left, location.top - textBounds.height(), location.right, location.top, backgroundPaint)
-
-                            // Рисуем текст поверх фона
-                            canvas.drawText(recognition.labelName, location.left, location.top, textPaint)
+                    sendImageToServer(uri) { photoUrl, category ->
+                        val bundle = Bundle().apply {
+                            putParcelable("imageUri", photoUrl)
+                            putString("imageCategory", category)
                         }
+
+                        findNavController().navigate(R.id.action_navigation_notifications_to_fragment_resultat, bundle)
                     }
-
-                    val tempFile = File.createTempFile("processed_image", ".png", requireContext().cacheDir)
-                    val outStream = FileOutputStream(tempFile)
-                    mutableBitmap.compress(Bitmap.CompressFormat.PNG, 100, outStream)
-                    outStream.close()
-
-                    val tempFileUri = FileProvider.getUriForFile(
-                        requireContext(),
-                        "com.example.hakaton.fileprovider",
-                        tempFile
-                    )
-
-                    val bundle = Bundle().apply {
-                        putParcelable("imageUri", tempFileUri)
-                    }
-
-                    // Переходим к ResultFragment, передавая Bundle
-                    findNavController().navigate(R.id.action_navigation_notifications_to_fragment_resultat, bundle)
                 }
             }, scaleAnimation.duration)
         }
@@ -399,68 +358,349 @@ class NotificationsFragment : Fragment() {
         return root
     }
 
-    private fun sendImageToServer(uri: Uri) {
+    private fun sendImageToServer(uri: Uri, onSuccess: (Uri, String?) -> Unit) {
         val storageRef = Firebase.storage.reference
         val imageRef = storageRef.child("images/${uri.lastPathSegment}")
 
         imageRef.putFile(uri).addOnSuccessListener {
             imageRef.downloadUrl.addOnSuccessListener { uri ->
-                val photoUrl = uri.toString()
+                val photoUrl = uri
                 Log.d("NotificationsFragment", "URL изображения: $photoUrl")
 
-                // Получение выбранного адреса и описания
                 val selectedAddress = binding.Camera2.text.toString()
                 val description = binding.opisanie.text.toString()
+                val district = binding.Camera3.text.toString()
 
-                // Создание запроса с адресом и описанием
-                val request = ImageUploadRequest(photo_url = photoUrl, address = selectedAddress, description = description)
-                sendPhotoUrlToServer(request)
+                val request = ImageUploadRequest(photo_url = photoUrl.toString(), district = district, area = selectedAddress, description = description)
+                sendPhotoUrlToServer(request) { category ->
+                    onSuccess(photoUrl, category)
+                }
             }.addOnFailureListener {
                 Log.e("NotificationsFragment", "Ошибка при получении URL изображения", it)
+                onSuccess(Uri.EMPTY, null)
             }
         }.addOnFailureListener {
             Log.e("NotificationsFragment", "Ошибка при загрузке изображения", it)
+            onSuccess(Uri.EMPTY, null)
         }
     }
 
+    private fun readLocationsFromXls(context: Context): List<Location> {
+        val assetManager = context.assets
+        val inputStream: InputStream? = try {
+            assetManager.open("locations.xls")
+        } catch (e: IOException) {
+            Log.e("NotificationsFragment", "Ошибка при чтении файла locations.xls", e)
+            null
+        }
 
-    private fun sendPhotoUrlToServer(request: ImageUploadRequest) {
+        if (inputStream == null) {
+            Log.e("NotificationsFragment", "Файл locations.xls не найден")
+            return emptyList()
+        }
+
+        val workbook = Workbook.getWorkbook(inputStream)
+        val sheet = workbook.getSheet(0)
+        val locations = mutableListOf<Location>()
+
+        for (row in 0 until sheet.rows) {
+            val district = sheet.getCell(0, row).contents
+            val address = sheet.getCell(1, row).contents
+            locations.add(Location(district, address))
+        }
+
+        workbook.close()
+        inputStream.close()
+        return locations
+    }
+
+    data class Location(val district: String, val address: String)
+
+    private fun sendPhotoUrlToServer(request: ImageUploadRequest, onCategoryReceived: (String?) -> Unit) {
         val retrofit = Retrofit.Builder()
-            .baseUrl("http://21dd-95-54-231-188.ngrok-free.app/")
+            .baseUrl("http://7060-95-54-231-188.ngrok-free.app/")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
 
         val apiService = retrofit.create(ApiService::class.java)
 
-        apiService.uploadImage(request).enqueue(object : Callback<ResponseBody> {
-            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+        Log.d("NotificationsFragment", "Отправляем запрос на сервер с описанием: ${request.description}")
+
+        apiService.uploadImage(request).enqueue(object : Callback<ServerResponse> {
+            override fun onResponse(call: Call<ServerResponse>, response: Response<ServerResponse>) {
                 if (response.isSuccessful) {
-                    Log.d("NotificationsFragment", "Изображение успешно отправлено")
+                    val serverResponse = response.body()
+                    if (serverResponse != null) {
+                        Log.d("NotificationsFragment", "Категория изображения: ${serverResponse.category}")
+                        onCategoryReceived(serverResponse.category)
+                    } else {
+                        Log.e("NotificationsFragment", "Ответ сервера пуст")
+                        onCategoryReceived(null)
+                    }
                 } else {
                     val errorBody = response.errorBody()?.string()
                     Log.e("NotificationsFragment", "Ошибка при отправке изображения: $errorBody")
+                    onCategoryReceived(null)
                 }
             }
 
-            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Log.e("NotificationsFragment", "Ошибка сети: ${t.message}")
+            override fun onFailure(call: Call<ServerResponse>, t: Throwable) {
+                Log.e("NotificationsFragment", "Ошибка сети: ${t.message}", t)
+                onCategoryReceived(null)
             }
         })
     }
-
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
 
-    data class ImageUploadRequest(val photo_url: String, val address: String, val description: String)
+    data class ImageUploadRequest(val photo_url: String, val district: String, val area: String, val description: String)
+
+    data class ServerResponse(val category: String)
 
     interface ApiService {
         @POST("predict")
-        fun uploadImage(@Body request: ImageUploadRequest): Call<ResponseBody>
+        fun uploadImage(@Body request: ImageUploadRequest): Call<ServerResponse>
     }
 }
+
+
+
+
+
+
+
+//////////////////////////////////////////                                          РАБОЧИЙ КОД!!!!
+//class NotificationsFragment : Fragment() {
+//
+//    private var _binding: FragmentNotificationsBinding? = null
+//    private val binding get() = _binding!!
+//
+//    private val sharedViewModel: SharedViewModel by activityViewModels()
+//    private lateinit var yolov5TFLiteDetector: Yolov5TFLiteDetector
+//    private lateinit var boxPaint: Paint
+//    private lateinit var textPaint: Paint
+//
+//    override fun onCreateView(
+//        inflater: LayoutInflater,
+//        container: ViewGroup?,
+//        savedInstanceState: Bundle?
+//    ): View {
+//        _binding = FragmentNotificationsBinding.inflate(inflater, container, false)
+//        val root: View = binding.root
+//
+//
+//        val locations = readLocationsFromXls(requireContext())
+//        val districts = locations.map { it.district }.distinct()
+//        val districtAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, districts)
+//        binding.Camera3.setAdapter(districtAdapter)
+//
+//        binding.Camera3.setOnItemClickListener { _, _, position, _ ->
+//            val selectedDistrict = districts[position]
+//            val filteredAddresses = locations.filter { it.district == selectedDistrict }.map { it.address }
+//            val addressAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, filteredAddresses)
+//            binding.Camera2.setAdapter(addressAdapter)
+//        }
+//
+//
+//        // Получение Uri изображения из Bundle
+//        arguments?.getParcelable<Uri>("imageUri")?.let { uri ->
+//            // Отображение изображения
+//            binding.resultImageView.setImageURI(uri)
+//            // Асинхронная отправка изображения на сервер
+//            CoroutineScope(Dispatchers.IO).launch {
+//                sendImageToServer(uri)
+//            }
+//        }
+//
+//        // Добавление обработчика ввода текста в EditText Camera2
+//        val cameraEditText = root.findViewById<EditText>(R.id.Camera2)
+//        cameraEditText.addTextChangedListener(object : TextWatcher {
+//            override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
+//
+//            override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
+//                Log.d("EditTextInput", "Текст изменен: $s")
+//                sharedViewModel.setCamera2Text(s.toString())
+//            }
+//
+//            override fun afterTextChanged(s: Editable) {}
+//        })
+//
+//        // Добавление обработчика ввода текста в EditText opisanie
+//        val opisanieEditText = root.findViewById<EditText>(R.id.opisanie)
+//        opisanieEditText.addTextChangedListener(object : TextWatcher {
+//            override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
+//
+//            override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
+//                Log.d("EditTextInput", "Текст2 изменен: $s")
+//                sharedViewModel.setOpisanieText(s.toString())
+//            }
+//
+//            override fun afterTextChanged(s: Editable) {}
+//        })
+//
+//        // Инициализация детектора и модели
+//        yolov5TFLiteDetector = Yolov5TFLiteDetector()
+//        yolov5TFLiteDetector.setModelFile("price.tflite")
+//        yolov5TFLiteDetector.initialModel(requireContext())
+//
+//        boxPaint = Paint().apply {
+//            strokeWidth = 5f
+//            style = Paint.Style.STROKE
+//            color = Color.RED
+//        }
+//
+//        // Создание Paint для фона
+//        val backgroundPaint = Paint().apply {
+//            color = Color.RED
+//            style = Paint.Style.FILL
+//        }
+//
+//        // Создание Paint для текста
+//        textPaint = Paint().apply {
+//            textSize = 60f
+//            color = Color.WHITE // Белые буквы
+//            style = Paint.Style.FILL
+//        }
+//
+//        val scaleAnimation = AnimationUtils.loadAnimation(requireContext(), R.anim.button_press_animation3)
+//
+//        // Обработка изображения при нажатии на кнопку
+//        binding.zagruzit.setOnClickListener {
+//            binding.zagruzit.startAnimation(scaleAnimation)
+//            binding.zagruzit.postDelayed({
+//                // Получение Uri изображения из Bundle
+//                arguments?.getParcelable<Uri>("imageUri")?.let { uri ->
+//                    val bitmap = MediaStore.Images.Media.getBitmap(requireContext().contentResolver, uri)
+//                    val recognitions = yolov5TFLiteDetector.detect(bitmap)
+//                    val mutableBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true)
+//                    val canvas = Canvas(mutableBitmap)
+//
+//                    for (recognition in recognitions) {
+//                        if (recognition.confidence > 0.4) {
+//                            val location = recognition.location
+//                            canvas.drawRect(location, boxPaint)
+//
+//                            val textBounds = Rect()
+//                            textPaint.getTextBounds(recognition.labelName, 0, recognition.labelName.length, textBounds)
+//                            canvas.drawRect(location.left, location.top - textBounds.height(), location.right, location.top, backgroundPaint)
+//
+//                            // Рисуем текст поверх фона
+//                            canvas.drawText(recognition.labelName, location.left, location.top, textPaint)
+//                        }
+//                    }
+//
+//                    val tempFile = File.createTempFile("processed_image", ".png", requireContext().cacheDir)
+//                    val outStream = FileOutputStream(tempFile)
+//                    mutableBitmap.compress(Bitmap.CompressFormat.PNG, 100, outStream)
+//                    outStream.close()
+//
+//                    val tempFileUri = FileProvider.getUriForFile(
+//                        requireContext(),
+//                        "com.example.hakaton.fileprovider",
+//                        tempFile
+//                    )
+//
+//                    val bundle = Bundle().apply {
+//                        putParcelable("imageUri", tempFileUri)
+//                    }
+//
+//                    // Переходим к ResultFragment, передавая Bundle
+//                    findNavController().navigate(R.id.action_navigation_notifications_to_fragment_resultat, bundle)
+//                }
+//            }, scaleAnimation.duration)
+//        }
+//
+//        return root
+//    }
+//
+//    private fun readLocationsFromXls(context: Context): List<Location> {
+//        val assetManager = context.assets
+//        val inputStream = assetManager.open("locations.xls") // Убедитесь, что файл называется "locations.xls"
+//        val workbook = Workbook.getWorkbook(inputStream)
+//        val sheet = workbook.getSheet(0)
+//        val locations = mutableListOf<Location>()
+//
+//        for (row in 0 until sheet.rows) {
+//            val district = sheet.getCell(0, row).contents
+//            val address = sheet.getCell(1, row).contents
+//            locations.add(Location(district, address))
+//        }
+//
+//        workbook.close()
+//        inputStream.close()
+//        return locations
+//    }
+//
+//    data class Location(val district: String, val address: String)
+//
+//    private fun sendImageToServer(uri: Uri) {
+//        val storageRef = Firebase.storage.reference
+//        val imageRef = storageRef.child("images/${uri.lastPathSegment}")
+//
+//        imageRef.putFile(uri).addOnSuccessListener {
+//            imageRef.downloadUrl.addOnSuccessListener { uri ->
+//                val photoUrl = uri.toString()
+//                Log.d("NotificationsFragment", "URL изображения: $photoUrl")
+//
+//                // Получение выбранного адреса и описания
+//                val selectedAddress = binding.Camera2.text.toString()
+//                val description = binding.opisanie.text.toString()
+//                val district = binding.Camera3.text.toString()
+//
+//                // Создание запроса с адресом и описанием
+//                val request = ImageUploadRequest(photo_url = photoUrl, district = district, area = selectedAddress, description = description)
+//                sendPhotoUrlToServer(request)
+//            }.addOnFailureListener {
+//                Log.e("NotificationsFragment", "Ошибка при получении URL изображения", it)
+//            }
+//        }.addOnFailureListener {
+//            Log.e("NotificationsFragment", "Ошибка при загрузке изображения", it)
+//        }
+//    }
+//
+//
+//    private fun sendPhotoUrlToServer(request: ImageUploadRequest) {
+//        val retrofit = Retrofit.Builder()
+//            .baseUrl("http://982d-95-54-231-188.ngrok-free.app/")
+//            .addConverterFactory(GsonConverterFactory.create())
+//            .build()
+//
+//        val apiService = retrofit.create(ApiService::class.java)
+//
+//        Log.d("NotificationsFragment", "Отправляем запрос на сервер с описанием: ${request.description}")
+//
+//        apiService.uploadImage(request).enqueue(object : Callback<ResponseBody> {
+//            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+//                if (response.isSuccessful) {
+//                    Log.d("NotificationsFragment", "Изображение успешно отправлено")
+//                } else {
+//                    val errorBody = response.errorBody()?.string()
+//                    Log.e("NotificationsFragment", "Ошибка при отправке изображения: $errorBody")
+//                }
+//            }
+//
+//            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+//                Log.e("NotificationsFragment", "Ошибка сети: ${t.message}")
+//            }
+//        })
+//    }
+//
+//
+//    override fun onDestroyView() {
+//        super.onDestroyView()
+//        _binding = null
+//    }
+//
+//    data class ImageUploadRequest(val photo_url: String, val district: String, val area: String, val description: String)
+//
+//    interface ApiService {
+//        @POST("predict")
+//        fun uploadImage(@Body request: ImageUploadRequest): Call<ResponseBody>
+//    }
+//}
 
 
 

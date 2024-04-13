@@ -74,6 +74,22 @@
         tools:ignore="MissingConstraints"
         tools:layout_editor_absoluteX="16dp" />
 
+    <TextView
+        android:id="@+id/text11"
+        android:layout_width="80dp"
+        android:layout_height="20dp"
+        android:layout_marginRight="315dp"
+        android:layout_marginBottom="10dp"
+        android:fontFamily="@font/sfprotext_regular"
+        android:gravity="center_vertical"
+        android:text="Район"
+        android:textColor="@color/white"
+        android:textSize="14dp"
+        app:layout_constraintBottom_toTopOf="@+id/Camera3"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:ignore="MissingConstraints"
+        tools:layout_editor_absoluteX="16dp" />
+
 
     <TextView
         android:id="@+id/text10"
@@ -91,11 +107,13 @@
         tools:ignore="MissingConstraints"
         tools:layout_editor_absoluteX="10dp" />
 
+
     <EditText
         android:id="@+id/opisanie"
         style="@style/purpleButtonStyle2"
         android:layout_width="390dp"
-        android:layout_height="150dp"
+        android:layout_height="95dp"
+        android:layout_marginTop="1dp"
         android:fontFamily="@font/sfprotext_regular"
         android:gravity="top"
         android:hint="@string/camera_hint"
@@ -106,16 +124,16 @@
         android:textSize="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.476"
+        app:layout_constraintHorizontal_bias="0.571"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/Camera2"
-        app:layout_constraintVertical_bias="0.301" />
+        app:layout_constraintVertical_bias="0.251" />
 
     <AutoCompleteTextView
-        android:id="@+id/Camera2"
+        android:id="@+id/Camera3"
         style="@style/purpleButtonStyle2"
         android:layout_width="390dp"
-        android:layout_height="80dp"
+        android:layout_height="60dp"
         android:fontFamily="@font/sfprotext_regular"
         android:gravity="center_vertical"
         android:hint="@string/camera_hint"
@@ -126,11 +144,31 @@
         android:textSize="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.476"
+        app:layout_constraintHorizontal_bias="0.571"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.526" />
+        app:layout_constraintVertical_bias="0.499" />
 
+    <AutoCompleteTextView
+        android:id="@+id/Camera2"
+        style="@style/purpleButtonStyle2"
+        android:layout_width="390dp"
+        android:layout_height="60dp"
+        android:fontFamily="@font/sfprotext_regular"
+        android:gravity="center_vertical"
+        android:hint="Текст"
+        android:paddingLeft="16dp"
+        android:selectAllOnFocus="true"
+        android:textColor="@color/g_white"
+        android:textColorHint="@color/g_gray700"
+        android:textSize="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.571"
+        app:layout_constraintStart_toStartOf="parent"
+
+        app:layout_constraintTop_toBottomOf="@+id/Camera3"
+        app:layout_constraintVertical_bias="0.135" />
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/zagruzit"
