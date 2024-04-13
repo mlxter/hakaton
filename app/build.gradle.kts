@@ -67,4 +67,11 @@ dependencies {
     implementation ("com.google.firebase:firebase-auth-ktx:22.0.0")
     implementation ("com.google.firebase:firebase-firestore:24.0.1")
     implementation ("com.google.firebase:firebase-firestore-ktx:24.0.1")
+    implementation ("com.google.firebase:firebase-storage-ktx:20.0.0")
+    implementation ("com.google.firebase:firebase-storage:20.2.1")
+    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation ("com.squareup.okhttp3:okhttp:4.9.3")
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0")
+
     }

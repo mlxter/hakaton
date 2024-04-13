@@ -18,6 +18,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.view.animation.AnimationUtils
+import android.widget.ArrayAdapter
 import androidx.fragment.app.Fragment
 import com.example.hakaton.R
 import com.example.hakaton.databinding.FragmentNotificationsBinding
@@ -122,13 +123,6 @@ import java.nio.ByteOrder
 //        _binding = FragmentNotificationsBinding.inflate(inflater, container, false)
 //        val root: View = binding.root
 //
-//
-//
-//
-//
-//
-//
-//
 //        // Получение Uri изображения из Bundle
 //        arguments?.getParcelable<Uri>("imageUri")?.let { uri ->
 //            // Отображение изображения
@@ -180,7 +174,7 @@ import java.nio.ByteOrder
 //
 //        // Создание Paint для текста
 //        val textPaint = Paint().apply {
-//            textSize = 100f
+//            textSize = 60f
 //            color = Color.WHITE // Белые буквы
 //            style = Paint.Style.FILL
 //        }
@@ -244,6 +238,231 @@ import java.nio.ByteOrder
 //        _binding = null
 //    }
 //}
+
+
+
+
+
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
+import com.google.firebase.storage.ktx.storage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import okhttp3.ResponseBody
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.http.Body
+import retrofit2.http.GET
+import retrofit2.http.POST
+import retrofit2.http.Query
+
+
+
+
+class NotificationsFragment : Fragment() {
+
+    private var _binding: FragmentNotificationsBinding? = null
+    private val binding get() = _binding!!
+
+    private val sharedViewModel: SharedViewModel by activityViewModels()
+    private lateinit var yolov5TFLiteDetector: Yolov5TFLiteDetector
+    private lateinit var boxPaint: Paint
+    private lateinit var textPaint: Paint
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentNotificationsBinding.inflate(inflater, container, false)
+        val root: View = binding.root
+
+
+        val addresses = listOf("г. Амвросиевка, ул, Мичурина, 1, ул. Фрунзе, 24", "г. Амвросиевка, ул, Мичурина, 4а", "г. Амвросиевка, ул. Ленина, 2, ул. Свободы, 13, ул. Краснодонцев, 32а, ул. Краснодонцев, 99", "г. Амвросиевка, ул. Суворова, 26, Донецкоешоссе, 3", "г. Амвросиевка, ул. 2-яПятилетка, ул. Ленина, 26, ул. Фрунзе, 12, ул. Мичурина, 81, ул. Фрунзе, 8, ул. Фрунзе, 2а") // Замените это на ваш список адресов
+
+        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, addresses)
+        binding.Camera2.setAdapter(adapter)
+
+        // Получение Uri изображения из Bundle
+        arguments?.getParcelable<Uri>("imageUri")?.let { uri ->
+            // Отображение изображения
+            binding.resultImageView.setImageURI(uri)
+            // Асинхронная отправка изображения на сервер
+            CoroutineScope(Dispatchers.IO).launch {
+                sendImageToServer(uri)
+            }
+        }
+
+        // Добавление обработчика ввода текста в EditText Camera2
+        val cameraEditText = root.findViewById<EditText>(R.id.Camera2)
+        cameraEditText.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
+                Log.d("EditTextInput", "Текст изменен: $s")
+                sharedViewModel.setCamera2Text(s.toString())
+            }
+
+            override fun afterTextChanged(s: Editable) {}
+        })
+
+        // Добавление обработчика ввода текста в EditText opisanie
+        val opisanieEditText = root.findViewById<EditText>(R.id.opisanie)
+        opisanieEditText.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
+                Log.d("EditTextInput", "Текст2 изменен: $s")
+                sharedViewModel.setOpisanieText(s.toString())
+            }
+
+            override fun afterTextChanged(s: Editable) {}
+        })
+
+        // Инициализация детектора и модели
+        yolov5TFLiteDetector = Yolov5TFLiteDetector()
+        yolov5TFLiteDetector.setModelFile("price.tflite")
+        yolov5TFLiteDetector.initialModel(requireContext())
+
+        boxPaint = Paint().apply {
+            strokeWidth = 5f
+            style = Paint.Style.STROKE
+            color = Color.RED
+        }
+
+        // Создание Paint для фона
+        val backgroundPaint = Paint().apply {
+            color = Color.RED
+            style = Paint.Style.FILL
+        }
+
+        // Создание Paint для текста
+        textPaint = Paint().apply {
+            textSize = 60f
+            color = Color.WHITE // Белые буквы
+            style = Paint.Style.FILL
+        }
+
+        val scaleAnimation = AnimationUtils.loadAnimation(requireContext(), R.anim.button_press_animation3)
+
+        // Обработка изображения при нажатии на кнопку
+        binding.zagruzit.setOnClickListener {
+            binding.zagruzit.startAnimation(scaleAnimation)
+            binding.zagruzit.postDelayed({
+                // Получение Uri изображения из Bundle
+                arguments?.getParcelable<Uri>("imageUri")?.let { uri ->
+                    val bitmap = MediaStore.Images.Media.getBitmap(requireContext().contentResolver, uri)
+                    val recognitions = yolov5TFLiteDetector.detect(bitmap)
+                    val mutableBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true)
+                    val canvas = Canvas(mutableBitmap)
+
+                    for (recognition in recognitions) {
+                        if (recognition.confidence > 0.4) {
+                            val location = recognition.location
+                            canvas.drawRect(location, boxPaint)
+
+                            val textBounds = Rect()
+                            textPaint.getTextBounds(recognition.labelName, 0, recognition.labelName.length, textBounds)
+                            canvas.drawRect(location.left, location.top - textBounds.height(), location.right, location.top, backgroundPaint)
+
+                            // Рисуем текст поверх фона
+                            canvas.drawText(recognition.labelName, location.left, location.top, textPaint)
+                        }
+                    }
+
+                    val tempFile = File.createTempFile("processed_image", ".png", requireContext().cacheDir)
+                    val outStream = FileOutputStream(tempFile)
+                    mutableBitmap.compress(Bitmap.CompressFormat.PNG, 100, outStream)
+                    outStream.close()
+
+                    val tempFileUri = FileProvider.getUriForFile(
+                        requireContext(),
+                        "com.example.hakaton.fileprovider",
+                        tempFile
+                    )
+
+                    val bundle = Bundle().apply {
+                        putParcelable("imageUri", tempFileUri)
+                    }
+
+                    // Переходим к ResultFragment, передавая Bundle
+                    findNavController().navigate(R.id.action_navigation_notifications_to_fragment_resultat, bundle)
+                }
+            }, scaleAnimation.duration)
+        }
+
+        return root
+    }
+
+    private fun sendImageToServer(uri: Uri) {
+        val storageRef = Firebase.storage.reference
+        val imageRef = storageRef.child("images/${uri.lastPathSegment}")
+
+        imageRef.putFile(uri).addOnSuccessListener {
+            imageRef.downloadUrl.addOnSuccessListener { uri ->
+                val photoUrl = uri.toString()
+                Log.d("NotificationsFragment", "URL изображения: $photoUrl")
+
+                // Получение выбранного адреса и описания
+                val selectedAddress = binding.Camera2.text.toString()
+                val description = binding.opisanie.text.toString()
+
+                // Создание запроса с адресом и описанием
+                val request = ImageUploadRequest(photo_url = photoUrl, address = selectedAddress, description = description)
+                sendPhotoUrlToServer(request)
+            }.addOnFailureListener {
+                Log.e("NotificationsFragment", "Ошибка при получении URL изображения", it)
+            }
+        }.addOnFailureListener {
+            Log.e("NotificationsFragment", "Ошибка при загрузке изображения", it)
+        }
+    }
+
+
+    private fun sendPhotoUrlToServer(request: ImageUploadRequest) {
+        val retrofit = Retrofit.Builder()
+            .baseUrl("http://21dd-95-54-231-188.ngrok-free.app/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+
+        val apiService = retrofit.create(ApiService::class.java)
+
+        apiService.uploadImage(request).enqueue(object : Callback<ResponseBody> {
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                if (response.isSuccessful) {
+                    Log.d("NotificationsFragment", "Изображение успешно отправлено")
+                } else {
+                    val errorBody = response.errorBody()?.string()
+                    Log.e("NotificationsFragment", "Ошибка при отправке изображения: $errorBody")
+                }
+            }
+
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                Log.e("NotificationsFragment", "Ошибка сети: ${t.message}")
+            }
+        })
+    }
+
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
+    data class ImageUploadRequest(val photo_url: String, val address: String, val description: String)
+
+    interface ApiService {
+        @POST("predict")
+        fun uploadImage(@Body request: ImageUploadRequest): Call<ResponseBody>
+    }
+}
+
+
 
 // РАБОЧИЙ КОД
 //class NotificationsFragment : Fragment() {
@@ -356,126 +575,126 @@ import java.nio.ByteOrder
 //    }
 //}
 
-class NotificationsFragment : Fragment() {
-
-    private var _binding: FragmentNotificationsBinding? = null
-    private val binding get() = _binding!!
-
-    private val sharedViewModel: SharedViewModel by activityViewModels()
-    private lateinit var yolov5TFLiteDetector: Yolov5TFLiteDetector
-    private lateinit var boxPaint: Paint
-    private lateinit var textPaint: Paint
-
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        _binding = FragmentNotificationsBinding.inflate(inflater, container, false)
-        val root: View = binding.root
-
-        // Получение Uri изображения из Bundle
-        arguments?.getParcelable<Uri>("imageUri")?.let { uri ->
-            // Отображение изображения
-            binding.resultImageView.setImageURI(uri)
-        }
-
-        // Инициализация детектора и модели
-        yolov5TFLiteDetector = Yolov5TFLiteDetector()
-        yolov5TFLiteDetector.setModelFile("price.tflite")
-        yolov5TFLiteDetector.initialModel(requireContext())
-
-        boxPaint = Paint().apply {
-            strokeWidth = 5f
-            style = Paint.Style.STROKE
-            color = Color.RED
-        }
-
-        // Создание Paint для фона
-        val backgroundPaint = Paint().apply {
-            color = Color.RED
-            style = Paint.Style.FILL
-        }
-
-        // Создание Paint для текста
-        textPaint = Paint().apply {
-            textSize = 100f
-            color = Color.WHITE // Белые буквы
-            style = Paint.Style.FILL
-        }
-
-        val scaleAnimation = AnimationUtils.loadAnimation(requireContext(), R.anim.button_press_animation3)
-
-        // Обработка изображения при нажатии на кнопку
-        binding.zagruzit.setOnClickListener {
-            binding.zagruzit.startAnimation(scaleAnimation)
-            binding.zagruzit.postDelayed({
-                // Получение Uri изображения из Bundle
-                arguments?.getParcelable<Uri>("imageUri")?.let { uri ->
-                    val bitmap = MediaStore.Images.Media.getBitmap(requireContext().contentResolver, uri)
-                    val recognitions = yolov5TFLiteDetector.detect(bitmap)
-                    val mutableBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true)
-                    val canvas = Canvas(mutableBitmap)
-
-                    for (recognition in recognitions) {
-                        if (recognition.confidence > 0.4) {
-                            val location = recognition.location
-                            canvas.drawRect(location, boxPaint)
-
-                            val textBounds = Rect()
-                            textPaint.getTextBounds(recognition.labelName, 0, recognition.labelName.length, textBounds)
-                            canvas.drawRect(location.left, location.top - textBounds.height(), location.right, location.top, backgroundPaint)
-
-                            // Рисуем текст поверх фона
-                            canvas.drawText(recognition.labelName, location.left, location.top, textPaint)
-                        }
-                    }
-
-                    // Инициализация ReadImageText для чтения текста с изображения
-                    val readImageText = ReadImageText(requireContext())
-                    // Предполагаем, что ReadImageText.processImage поддерживает несколько языков через параметр
-                    val languages = listOf("rus", "eng") // Добавьте сюда все языки, которые вы хотите распознать
-                    val recognizedTexts = mutableListOf<String>()
-
-                    for (language in languages) {
-                        val text = readImageText.processImage(mutableBitmap, language)
-                        recognizedTexts.add(text)
-                    }
-
-                    // Теперь recognizedTexts содержит текст, распознанный на всех указанных языках
-                    // Вы можете объединить результаты или обработать их по-разному
-
-                    val tempFile = File.createTempFile("processed_image", ".png", requireContext().cacheDir)
-                    val outStream = FileOutputStream(tempFile)
-                    mutableBitmap.compress(Bitmap.CompressFormat.PNG, 100, outStream)
-                    outStream.close()
-
-                    val tempFileUri = FileProvider.getUriForFile(
-                        requireContext(),
-                        "com.example.hakaton.fileprovider",
-                        tempFile
-                    )
-
-                    val bundle = Bundle().apply {
-                        putParcelable("imageUri", tempFileUri)
-                        // Добавьте текст в Bundle, например, объединив результаты распознавания
-                        putString("recognizedText", recognizedTexts.joinToString(separator = "\n"))
-                    }
-
-                    // Переходим к ResultFragment, передавая Bundle
-                    findNavController().navigate(R.id.action_navigation_notifications_to_fragment_resultat, bundle)
-                }
-            }, scaleAnimation.duration)
-        }
-
-        return root
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
-}
+//class NotificationsFragment : Fragment() {
+//
+//    private var _binding: FragmentNotificationsBinding? = null
+//    private val binding get() = _binding!!
+//
+//    private val sharedViewModel: SharedViewModel by activityViewModels()
+//    private lateinit var yolov5TFLiteDetector: Yolov5TFLiteDetector
+//    private lateinit var boxPaint: Paint
+//    private lateinit var textPaint: Paint
+//
+//    override fun onCreateView(
+//        inflater: LayoutInflater,
+//        container: ViewGroup?,
+//        savedInstanceState: Bundle?
+//    ): View {
+//        _binding = FragmentNotificationsBinding.inflate(inflater, container, false)
+//        val root: View = binding.root
+//
+//        // Получение Uri изображения из Bundle
+//        arguments?.getParcelable<Uri>("imageUri")?.let { uri ->
+//            // Отображение изображения
+//            binding.resultImageView.setImageURI(uri)
+//        }
+//
+//        // Инициализация детектора и модели
+//        yolov5TFLiteDetector = Yolov5TFLiteDetector()
+//        yolov5TFLiteDetector.setModelFile("price.tflite")
+//        yolov5TFLiteDetector.initialModel(requireContext())
+//
+//        boxPaint = Paint().apply {
+//            strokeWidth = 5f
+//            style = Paint.Style.STROKE
+//            color = Color.RED
+//        }
+//
+//        // Создание Paint для фона
+//        val backgroundPaint = Paint().apply {
+//            color = Color.RED
+//            style = Paint.Style.FILL
+//        }
+//
+//        // Создание Paint для текста
+//        textPaint = Paint().apply {
+//            textSize = 100f
+//            color = Color.WHITE // Белые буквы
+//            style = Paint.Style.FILL
+//        }
+//
+//        val scaleAnimation = AnimationUtils.loadAnimation(requireContext(), R.anim.button_press_animation3)
+//
+//        // Обработка изображения при нажатии на кнопку
+//        binding.zagruzit.setOnClickListener {
+//            binding.zagruzit.startAnimation(scaleAnimation)
+//            binding.zagruzit.postDelayed({
+//                // Получение Uri изображения из Bundle
+//                arguments?.getParcelable<Uri>("imageUri")?.let { uri ->
+//                    val bitmap = MediaStore.Images.Media.getBitmap(requireContext().contentResolver, uri)
+//                    val recognitions = yolov5TFLiteDetector.detect(bitmap)
+//                    val mutableBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true)
+//                    val canvas = Canvas(mutableBitmap)
+//
+//                    for (recognition in recognitions) {
+//                        if (recognition.confidence > 0.4) {
+//                            val location = recognition.location
+//                            canvas.drawRect(location, boxPaint)
+//
+//                            val textBounds = Rect()
+//                            textPaint.getTextBounds(recognition.labelName, 0, recognition.labelName.length, textBounds)
+//                            canvas.drawRect(location.left, location.top - textBounds.height(), location.right, location.top, backgroundPaint)
+//
+//                            // Рисуем текст поверх фона
+//                            canvas.drawText(recognition.labelName, location.left, location.top, textPaint)
+//                        }
+//                    }
+//
+//                    // Инициализация ReadImageText для чтения текста с изображения
+//                    val readImageText = ReadImageText(requireContext())
+//                    // Предполагаем, что ReadImageText.processImage поддерживает несколько языков через параметр
+//                    val languages = listOf("rus", "eng") // Добавьте сюда все языки, которые вы хотите распознать
+//                    val recognizedTexts = mutableListOf<String>()
+//
+//                    for (language in languages) {
+//                        val text = readImageText.processImage(mutableBitmap, language)
+//                        recognizedTexts.add(text)
+//                    }
+//
+//                    // Теперь recognizedTexts содержит текст, распознанный на всех указанных языках
+//                    // Вы можете объединить результаты или обработать их по-разному
+//
+//                    val tempFile = File.createTempFile("processed_image", ".png", requireContext().cacheDir)
+//                    val outStream = FileOutputStream(tempFile)
+//                    mutableBitmap.compress(Bitmap.CompressFormat.PNG, 100, outStream)
+//                    outStream.close()
+//
+//                    val tempFileUri = FileProvider.getUriForFile(
+//                        requireContext(),
+//                        "com.example.hakaton.fileprovider",
+//                        tempFile
+//                    )
+//
+//                    val bundle = Bundle().apply {
+//                        putParcelable("imageUri", tempFileUri)
+//                        // Добавьте текст в Bundle, например, объединив результаты распознавания
+//                        putString("recognizedText", recognizedTexts.joinToString(separator = "\n"))
+//                    }
+//
+//                    // Переходим к ResultFragment, передавая Bundle
+//                    findNavController().navigate(R.id.action_navigation_notifications_to_fragment_resultat, bundle)
+//                }
+//            }, scaleAnimation.duration)
+//        }
+//
+//        return root
+//    }
+//
+//    override fun onDestroyView() {
+//        super.onDestroyView()
+//        _binding = null
+//    }
+//}
 
 
 

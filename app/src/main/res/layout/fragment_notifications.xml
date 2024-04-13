@@ -66,7 +66,7 @@
         android:layout_marginBottom="10dp"
         android:fontFamily="@font/sfprotext_regular"
         android:gravity="center_vertical"
-        android:text="Заголовок"
+        android:text="Адрес"
         android:textColor="@color/white"
         android:textSize="14dp"
         app:layout_constraintBottom_toTopOf="@+id/Camera2"
@@ -111,7 +111,7 @@
         app:layout_constraintTop_toBottomOf="@+id/Camera2"
         app:layout_constraintVertical_bias="0.301" />
 
-    <EditText
+    <AutoCompleteTextView
         android:id="@+id/Camera2"
         style="@style/purpleButtonStyle2"
         android:layout_width="390dp"
@@ -130,6 +130,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.526" />
+
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/zagruzit"

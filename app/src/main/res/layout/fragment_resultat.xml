@@ -66,7 +66,7 @@
         android:layout_marginEnd="280dp"
         android:fontFamily="@font/sfprotext_bold"
         android:gravity="center_vertical"
-        android:text="Заголовок:"
+        android:text="Адрес:"
         android:textColor="@color/purple_500"
         android:textSize="20dp"
         app:layout_constraintEnd_toEndOf="parent"

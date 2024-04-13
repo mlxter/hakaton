@@ -10,7 +10,7 @@ import android.util.Size;
 import android.widget.Toast;
 
 
-import org.checkerframework.checker.nullness.Opt;
+
 import org.checkerframework.checker.units.qual.C;
 import org.tensorflow.lite.DataType;
 import org.tensorflow.lite.Delegate;

@@ -77,11 +77,11 @@ class ResultFragment : Fragment() {
             binding.resultImageView2.setImageURI(uri)
         }
 
-        // Получение распознанного текста из Bundle
-        arguments?.getString("recognizedText")?.let { text ->
-            // Отображение распознанного текста в элементе с идентификатором "rezultat"
-            binding.rezultat.text = text // Используйте binding для доступа к элементу интерфейса
-        }
+//        // Получение распознанного текста из Bundle
+//        arguments?.getString("recognizedText")?.let { text ->
+//            // Отображение распознанного текста в элементе с идентификатором "rezultat"
+//            binding.rezultat.text = text // Используйте binding для доступа к элементу интерфейса
+//        }
 
 
         // Наблюдение за изменениями текста в SharedViewModel для Camera2

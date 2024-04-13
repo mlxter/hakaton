@@ -36,7 +36,7 @@
     </fragment>
     <fragment
         android:id="@+id/fragment_resultat"
-        android:name="com.example.hakaton.ui.rezultat.LoginFragment"
+        android:name="com.example.hakaton.ui.rezultat.ResultFragment"
         android:label="rezultat"
         tools:layout="@layout/fragment_resultat" />
 </navigation>

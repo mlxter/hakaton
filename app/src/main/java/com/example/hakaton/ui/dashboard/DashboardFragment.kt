@@ -26,6 +26,7 @@ import com.example.hakaton.R
 import com.example.hakaton.Yolov5TFLiteDetector
 import com.example.hakaton.databinding.FragmentDashboardBinding
 import com.example.hakaton.ui.SharedViewModel
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import java.io.File
 
 //class DashboardFragment : Fragment() {
@@ -91,11 +92,6 @@ import java.io.File
 
 
 
-import com.google.android.material.bottomnavigation.BottomNavigationView
-import org.tensorflow.lite.Interpreter
-import java.io.FileOutputStream
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
 
 
 class DashboardFragment : Fragment() {
@@ -186,6 +182,118 @@ class DashboardFragment : Fragment() {
         _binding = null
     }
 }
+
+
+
+
+//class DashboardFragment : Fragment() {
+//
+//    private var _binding: FragmentDashboardBinding? = null
+//    private val binding get() = _binding!!
+//
+//    private lateinit var lastImageUri: Uri
+//    private lateinit var captureImage: ActivityResultLauncher<Uri>
+//    private lateinit var selectImage: ActivityResultLauncher<String>
+//
+//    override fun onCreateView(
+//        inflater: LayoutInflater,
+//        container: ViewGroup?,
+//        savedInstanceState: Bundle?
+//    ): View {
+//        _binding = FragmentDashboardBinding.inflate(inflater, container, false)
+//        return binding.root
+//    }
+//
+//    val scaleAnimation = AnimationUtils.loadAnimation(requireContext(), R.anim.button_press_animation2)
+//
+//    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+//        super.onViewCreated(view, savedInstanceState)
+//
+//        captureImage = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+//            if (success) {
+//                sendImageToServer(lastImageUri)
+//            }
+//        }
+//
+//        selectImage = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+//            uri?.let {
+//                sendImageToServer(it)
+//            }
+//        }
+//
+//        binding.Camera.setOnClickListener {
+//            binding.Camera.startAnimation(scaleAnimation)
+//            val imageUri = createImageUri()
+//            lastImageUri = imageUri
+//            captureImage.launch(imageUri)
+//        }
+//
+//        binding.galereya.setOnClickListener {
+//            selectImage.launch("image/*")
+//        }
+//    }
+//
+//    private fun createImageUri(): Uri {
+//        val image = File(requireContext().filesDir, "camera_photos.png")
+//        return FileProvider.getUriForFile(
+//            requireContext(),
+//            "com.example.hakaton.fileprovider",
+//            image
+//        )
+//    }
+//
+//    private fun sendImageToServer(uri: Uri) {
+//        val storageRef = Firebase.storage.reference
+//        val imageRef = storageRef.child("images/${uri.lastPathSegment}")
+//
+//        imageRef.putFile(uri).addOnSuccessListener {
+//            imageRef.downloadUrl.addOnSuccessListener { uri ->
+//                val photoUrl = uri.toString()
+//                Log.d("DashboardFragment", "URL изображения: $photoUrl")
+//                sendPhotoUrlToServer(photoUrl)
+//            }.addOnFailureListener {
+//                Log.e("DashboardFragment", "Ошибка при получении URL изображения", it)
+//            }
+//        }.addOnFailureListener {
+//            Log.e("DashboardFragment", "Ошибка при загрузке изображения", it)
+//        }
+//    }
+//
+//    private fun sendPhotoUrlToServer(photoUrl: String) {
+//        val retrofit = Retrofit.Builder()
+//            .baseUrl("http://f185-95-54-231-188.ngrok-free.app/")
+//            .addConverterFactory(GsonConverterFactory.create())
+//            .build()
+//
+//        val apiService = retrofit.create(ApiService::class.java)
+//
+//        apiService.uploadImage(photoUrl).enqueue(object : Callback<ResponseBody> {
+//            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+//                if (response.isSuccessful) {
+//                    Log.d("DashboardFragment", "Изображение успешно отправлено")
+//                } else {
+//                    val errorBody = response.errorBody()?.string()
+//                    Log.e("DashboardFragment", "Ошибка при отправке изображения: $errorBody")
+//                }
+//            }
+//
+//            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+//                Log.e("DashboardFragment", "Ошибка сети: ${t.message}")
+//            }
+//        })
+//    }
+//
+//    override fun onDestroyView() {
+//        super.onDestroyView()
+//        _binding = null
+//    }
+//
+//    interface ApiService {
+//        @GET("predict")
+//        fun uploadImage(@Query("photo_url") photoUrl: String): Call<ResponseBody>
+//    }
+//}
+
 
 
 //class DashboardFragment : Fragment() {
